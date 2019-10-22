@@ -1,0 +1,36 @@
+polygon {
+    stroke: black;
+    fill: white;
+}
+
+polygon:hover {
+    stroke: red;
+}
+
+.water {
+    fill: #007dff;
+}
+
+.wheat {
+    fill: #ffdd00;
+}
+
+.wood {
+    fill: green;
+}
+
+.lamb {
+    fill: white;
+}
+
+.clay {
+    fill: #9b3e24;
+}
+
+.ore {
+    fill: dimgray;
+}
+
+.desert {
+    fill: sandybrown;
+}
