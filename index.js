@@ -1,31 +1,31 @@
 
 const tileTypes = {
   water: {
-    color: "#007dff",
+    style: "water",
     text: ''
   },
   wheat: {
-    color: "#ffea20",
+    style: 'wheat',
     text: 'Wh'
   },
   wood: {
-    color: "#35c104",
+    style: 'wood',
     text: 'Wo'
   },
   lamb: {
-    color: "#ffffff",
+    style: 'lamb',
     text: 'L'
   },
   clay: {
-    color: "#9b3e24",
+    style: 'clay',
     text: 'C'
   },
   ore: {
-    color: "#494949",
+    style: 'ore',
     text: 'O'
   },
   desert: {
-    color: "#fff99c",
+    style: 'desert',
     text: 'D'
   }
 };
@@ -36,20 +36,24 @@ function getRandomInt(min, max) {
   return Math.floor(Math.random() * (max - min)) + min; //Максимум не включается, минимум включается
 }
 
-function drawTile(canvas,x, y, size, tile) {
-  canvas.beginPath();
+function drawTile(svg,x, y, size, tile) {
+  const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+  svg.appendChild(polygon);
+  polygon.setAttribute("class", tile.type.style);
+  const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+  text.textContent = tile.type.text;
+  text.setAttribute("x", x);
+  text.setAttribute("y", y);
+  text.setAttribute("text-anchor", "middle");
+  svg.appendChild(text);
+
   for (let side = 0; side < 7; side++) {
     const angle = side * 2 * Math.PI / 6 + Math.PI / 6;
-    canvas.lineTo(x + size * Math.cos(angle), y + size * Math.sin(angle));
+    const point = svg.createSVGPoint();
+    point.x = x + size * Math.cos(angle);
+    point.y = y + size * Math.sin(angle);
+    polygon.points.appendItem(point);
   }
-  canvas.fillStyle = tile.type.color;
-  canvas.strokeStyle = "#373737";
-  canvas.fill();
-  canvas.stroke();
-
-  canvas.fillStyle = "#000000";
-  canvas.textAlign = "center";
-  canvas.fillText(tile.type.text, x, y);
 }
 
 function addTiles(deck, tileType, count) {
@@ -103,14 +107,13 @@ function generateMap(mapWidth, mapHeight) {
 function ready() {
   const mapWidth = 3 + 1;
   const mapHeight = 4 + 1;
-  const tileSize = 20;
+  const tileSize = 40;
   const tileWidth = tileSize * Math.cos(Math.PI / 6) * 2;
   const tileHeight = tileSize * 2;
+  const svg = document.getElementById("svg");
 
-  const canvas = document.querySelector('#canvas').getContext('2d');
-
-  const mapX = 200,
-    mapY = 100;
+  const mapX = 400,
+    mapY = tileSize;
 
   const map = generateMap(mapWidth, mapHeight);
 
@@ -121,7 +124,7 @@ function ready() {
       const tile = row[x];
       const tileX = mapX - (rowWidth / 2) + x * tileWidth;
       const tileY  = mapY + y * (tileHeight - (Math.sin(Math.PI / 6) * tileSize));
-      drawTile(canvas, tileX, tileY, tileSize, tile);
+      drawTile(svg, tileX, tileY, tileSize, tile);
     }
   }
 }
