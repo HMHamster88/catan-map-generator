@@ -1,6 +1,11 @@
 <body>
   <script src="index.js" lang="js"></script>
   <link rel="stylesheet" type="text/css" href="styles.css">
+  <form>
+    <label><input type="radio" name="type" value="classic"/>Classic</label><br>
+    <label><input type="radio" name="type" value="extended" checked/>Extended</label><br>
+    <input type="button" onclick="generate()" value="Generate"/>
+  </form>
   <svg id="svg" width="800" height="600">
   </svg>
 </body>
