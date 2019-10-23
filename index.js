@@ -108,6 +108,57 @@ function addPorts(deck, portType, count) {
   }
 }
 
+function range(from, to) {
+  const result = [];
+  for(let i = from; i <= to; i++) {
+    result.push(i);
+  }
+  return result;
+}
+
+function setRange(obj, value, from, to) {
+  for(let i of range(from, to)) {
+    obj[i] = value;
+  }
+}
+
+function getPossibleSides(isLeft, isRight, isTop, isBottom, isTopHalf, isBottomHalf) {
+  const sides = {};
+  setRange(sides, true, 0, 5);
+  if (isLeft) {
+    if (isTopHalf) {
+      setRange(sides, false, 1, 4);
+    }
+    if (isBottomHalf) {
+      setRange(sides, false, 0, 3)
+    }
+  }
+  if (isRight) {
+    if (isTopHalf) {
+      setRange(sides, false, 3, 5);
+      sides[0] = false;
+    }
+    if (isBottomHalf) {
+      setRange(sides, false, 4, 5)
+      setRange(sides, false, 0, 1)
+    }
+  }
+  if (isTop) {
+    setRange(sides, false, 2, 5);
+  }
+  if (isBottom) {
+    setRange(sides, false, 0, 2);
+    sides[5] = 0;
+  }
+  const result = [];
+  for(let key in Object.keys(sides)) {
+    if (sides[key]) {
+      result.push(key);
+    }
+  }
+  return result;
+}
+
 function generateMap(settings) {
 
   const mapWidth = settings.width + 1;
@@ -139,9 +190,19 @@ function generateMap(settings) {
     const row = [];
     map[y] = row;
     for (let x = 0; x < width; x++) {
-      const isWater = (x === 0 || x === width -1 || y === 0 || y === mapHeight * 2 - 2);
+      const isLeft = x === 0;
+      const isRight = x === width - 1;
+      const isTop = y === 0;
+      const isBottom = y === mapHeight * 2 - 2;
+      const isWater = isLeft || isRight || isTop || isBottom;
       if (isWater) {
+        const isTopHalf = y <= settings.height;
+        const isBottomHalf = y >= settings.height;
         const tile = waterDeck.splice(getRandomInt(0, waterDeck.length), 1)[0];
+        if (tile.portType) {
+          const possibleSides = getPossibleSides(isLeft, isRight, isTop, isBottom, isTopHalf, isBottomHalf);
+          tile.portSide = possibleSides[getRandomInt(0, possibleSides.length)];
+        }
         row[x] = tile;
       } else {
         const tile = deck.splice(getRandomInt(0, deck.length), 1)[0];
@@ -155,8 +216,6 @@ function generateMap(settings) {
     }
   }
 
-  console.log(waterDeck);
-
   return map;
 }
 
@@ -167,31 +226,36 @@ function addPoint(svg, x, y, size, angle, polygon) {
   polygon.points.appendItem(point);
   return point;
 }
+
 function drawTile(svg,x, y, size, tile) {
   const polygon = createSvgElement('polygon');
   svg.appendChild(polygon);
   polygon.setAttribute('class', tile.type.style);
-  const text = createSvgElement('text');
-  text.textContent = tile.portType ? tile.portType.text : tile.type.text;
-  text.setAttribute('x', x);
-  text.setAttribute('y', y);
-  text.setAttribute('text-anchor', 'middle');
-  svg.appendChild(text);
+
 
   for (let side = 0; side < 7; side++) {
     const angle = side * 2 * Math.PI / 6 + Math.PI / 6;
     addPoint(svg, x, y, size, angle, polygon);
   }
 
-  if (tile.portType) {
+  if (tile.portSide) {
     const sidePolygon = createSvgElement('polygon');
     svg.appendChild(sidePolygon);
-    const side = 0;
-    const angle1 = side * 2 * Math.PI / 6 + Math.PI / 6;
+    const angle1 = tile.portSide * 2 * Math.PI / 6 + Math.PI / 6;
     const angle2 = angle1 + Math.PI / 3;
     addPoint(svg, x, y, size * 0.9, angle1, sidePolygon);
     addPoint(svg, x, y, size * 0.9, angle2, sidePolygon);
+    addPoint(svg, x, y, size * 0.6, angle2, sidePolygon);
+    addPoint(svg, x, y, size * 0.6, angle1, sidePolygon);
+    sidePolygon.setAttribute('class', tile.portType.style);
   }
+
+  const text = createSvgElement('text');
+  text.textContent = tile.portType ? tile.portType.text : tile.type.text;
+  text.setAttribute('x', x);
+  text.setAttribute('y', y);
+  text.setAttribute('text-anchor', 'middle');
+  svg.appendChild(text);
 }
 
 function drawMap(map, svg) {
@@ -215,7 +279,6 @@ function drawMap(map, svg) {
 function generate() {
   const svg = document.getElementById("svg");
   const type = document.querySelector('input[name="type"]:checked').value;
-  console.log("Type " + type);
   const settings = settingsList[type];
   const map = generateMap(settings);
 
