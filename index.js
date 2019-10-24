@@ -77,10 +77,28 @@ const settingsList = {
   }
 };
 
+let m_w = 123456789;
+let m_z = 987654321;
+const  mask = 0xffffffff;
+
+function seed(i) {
+  m_w = (123456789 + i) & mask;
+  m_z = (987654321 - i) & mask;
+}
+
+function random()
+{
+  m_z = (36969 * (m_z & 65535) + (m_z >> 16)) & mask;
+  m_w = (18000 * (m_w & 65535) + (m_w >> 16)) & mask;
+  var result = ((m_z << 16) + (m_w & 65535)) >>> 0;
+  result /= 4294967296;
+  return result;
+}
+
 function getRandomInt(min, max) {
   min = Math.ceil(min);
   max = Math.floor(max);
-  return Math.floor(Math.random() * (max - min)) + min; //Максимум не включается, минимум включается
+  return Math.floor(random() * (max - min)) + min; //Максимум не включается, минимум включается
 }
 
 function createSvgElement(tagName) {
@@ -172,7 +190,7 @@ function generateMap(settings) {
       addPorts(portDeck, tileType, tilesCount);
     });
 
-  const portsInOdd = Math.random() < 0.5;
+  const portsInOdd = random() < 0.5;
 
   const groundTiles = settings.groundTiles;
   Object.keys(groundTiles)
@@ -285,6 +303,11 @@ function drawMap(map, svg) {
 function generate() {
   const svg = document.getElementById("svg");
   const type = document.querySelector('input[name="type"]:checked').value;
+  const useSeedFromInput = document.getElementById('seedCheckbox').checked;
+  const seedNumberInput = document.getElementById('seedNumber');
+  const seedValue = useSeedFromInput ? seedNumberInput.value : Math.floor(Math.random() * 0xffffff);
+  seed(seedValue);
+  seedNumberInput.value = seedValue;
   const settings = settingsList[type];
   const map = generateMap(settings);
 
