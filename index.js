@@ -46,15 +46,14 @@ const settingsList = {
       ore: 3,
       desert: 1
     },
-    waterTiles: {
+    portTiles: {
       wheat: 1,
       wood: 1,
       lamb: 1,
       clay: 1,
       ore: 1,
       threeToOne: 4
-    },
-    totalWaterTiles: 18
+    }
   },
   extended: {
     width: 3,
@@ -67,15 +66,14 @@ const settingsList = {
       ore: 5,
       desert: 2
     },
-    waterTiles: {
+    portTiles: {
       wheat: 1,
       wood: 1,
       lamb: 2,
       clay: 1,
       ore: 1,
       threeToOne: 5
-    },
-    totalWaterTiles: 22
+    }
   }
 };
 
@@ -164,17 +162,17 @@ function generateMap(settings) {
   const mapWidth = settings.width + 1;
   const mapHeight = settings.height + 1;
   const deck = [];
-  const waterDeck = [];
+  const portDeck = [];
 
-  const waterTiles = settings.waterTiles;
-  Object.keys(waterTiles)
+  const portTiles = settings.portTiles;
+  Object.keys(portTiles)
     .forEach(tileTypeName => {
-      const tilesCount = waterTiles[tileTypeName];
+      const tilesCount = portTiles[tileTypeName];
       const tileType = tileTypes[tileTypeName];
-      addPorts(waterDeck, tileType, tilesCount);
+      addPorts(portDeck, tileType, tilesCount);
     });
 
-  addTiles(waterDeck, tileTypes.water, settings.totalWaterTiles - waterDeck.length);
+  const portsInOdd = Math.random() < 0.5;
 
   const groundTiles = settings.groundTiles;
   Object.keys(groundTiles)
@@ -198,7 +196,15 @@ function generateMap(settings) {
       if (isWater) {
         const isTopHalf = y <= settings.height;
         const isBottomHalf = y >= settings.height;
-        const tile = waterDeck.splice(getRandomInt(0, waterDeck.length), 1)[0];
+        const odd = !!((x === 0) ?
+          (y % 2 === 0) :
+          (x % 2 === 0));
+
+        const tile = (portsInOdd === odd) ?
+          portDeck.splice(getRandomInt(0, portDeck.length), 1)[0] :
+          {
+            type: tileTypes.water
+          };
         if (tile.portType) {
           const possibleSides = getPossibleSides(isLeft, isRight, isTop, isBottom, isTopHalf, isBottomHalf);
           tile.portSide = possibleSides[getRandomInt(0, possibleSides.length)];
